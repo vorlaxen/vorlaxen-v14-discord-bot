@@ -1,7 +1,7 @@
 name: VorlaxenDiscordBot
 
 services:
-  bot:
+  app:
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -12,28 +12,12 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/dist
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: pnpm dev
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: vorlaxen_worker
-    restart: unless-stopped
-    env_file:
-      - ./env/.env.development
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      - redis
-      - postgres
-    command: pnpm ts-node -r tsconfig-paths/register src/infrastructure/queues/queue.worker.ts
 
   postgres:
     image: postgres:16-alpine
