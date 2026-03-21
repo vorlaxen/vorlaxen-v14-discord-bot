@@ -3,7 +3,7 @@ import { BotEvent } from '@/shared/types/bot.type';
 import { VorlaxenBot } from '@/core/bot';
 import { botClientConfig } from '@/config';
 import logger from '@/infrastructure/logger';
-import { checkCooldown } from '@/shared/utils/bot/cacheUtils';
+import { checkCooldown } from '@/shared/utils/bot/bot-cache.util';
 
 const messageCreate: BotEvent<Events.MessageCreate> = {
   name: Events.MessageCreate,

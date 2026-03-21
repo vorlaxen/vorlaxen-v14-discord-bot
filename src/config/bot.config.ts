@@ -16,3 +16,12 @@ export const botClientConfig: IBotClientConfigConfig = {
   prefix: EnvUtils.mustParse(env.BOT_PREFIX, 'BOT_PREFIX', String),
   ownerIds: ["1391178471442747424"]
 }
+
+export enum BotComponentColor {
+  PRIMARY = '#5865F2',
+  SUCCESS = '#57F287',
+  DANGER = '#ED4245',
+  WARNING = '#FEE75C',
+  INFO = '#3498DB',
+  PROCESS = '#2B2D31'
+}

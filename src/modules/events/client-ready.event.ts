@@ -1,7 +1,7 @@
 import { Events, ActivityType, ClientPresenceStatus } from "discord.js";
 import { BotEvent } from "@/shared/types/bot.type";
 import logger from "@/infrastructure/logger";
-import PresenceHelper from "@/shared/utils/bot/presenceHelper";
+import PresenceHelper from "@/shared/utils/bot/presence.util";
 
 const ACTIVITIES = [
     { name: "TypeScript writes", type: ActivityType.Playing, durationMs: 45_000 },
