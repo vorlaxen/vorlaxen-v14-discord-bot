@@ -7,12 +7,6 @@ RUN corepack enable && pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN find src/modules -type d -name "templates" | while read -r dir; do \
-    dest="dist/${dir#src/}"; \
-    mkdir -p "$(dirname "$dest")"; \
-    cp -rf "$dir" "$dest"; \
-    done
-
 RUN pnpm build
 
 FROM node:20-alpine AS runner
@@ -24,7 +18,6 @@ ENV NODE_ENV=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=builder /app/data ./data
 
 RUN corepack enable && pnpm install --prod --frozen-lockfile
 
