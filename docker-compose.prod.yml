@@ -1,15 +1,13 @@
-name: VorlaxenDiscordBot
-
 services:
-  app:
+  api:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.prod
     container_name: vorlaxen_bot
     restart: unless-stopped
-    env_file:
-      - ./env/.env.development
+    environment:
+      NODE_ENV: production
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/dist
+      - ./media:/app/media
+    networks:
+      - coolify
