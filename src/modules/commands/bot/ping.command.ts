@@ -1,8 +1,4 @@
-import { 
-  SlashCommandBuilder, 
-  Message, 
-  ChatInputCommandInteraction, 
-} from 'discord.js';
+import { SlashCommandBuilder, Message, ChatInputCommandInteraction } from 'discord.js';
 import { BotCommand } from '@/shared/types/bot.type';
 import { BotComponentColor } from '@/config';
 import { MessageHelper } from '@/shared/utils/bot';
@@ -15,8 +11,8 @@ const PingCommand: BotCommand = {
   data: new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Measures system latency and server status.'),
-    
-  execute: async (context) => {
+
+  execute: async context => {
     const isSlash = context instanceof ChatInputCommandInteraction;
     const startTime = Date.now();
 
@@ -33,21 +29,21 @@ const PingCommand: BotCommand = {
       color: wsPing > 200 ? BotComponentColor.DANGER : BotComponentColor.SUCCESS,
       fields: [
         { name: 'API Latency', value: `\`${wsPing}ms\``, inline: true },
-        { name: 'Message Response', value: `\`${msgPing}ms\``, inline: true }
-      ]
+        { name: 'Message Response', value: `\`${msgPing}ms\``, inline: true },
+      ],
     });
 
     const row = MessageHelper.linkButton('System Status (Web)', 'https://status.vorlaxen.com');
 
     if (isSlash) {
-      return await context.editReply({ 
-        embeds: [pingEmbed], 
-        components: [row] 
+      return await context.editReply({
+        embeds: [pingEmbed],
+        components: [row],
       });
     } else {
-      return await (context as Message).reply({ 
-        embeds: [pingEmbed], 
-        components: [row] 
+      return await (context as Message).reply({
+        embeds: [pingEmbed],
+        components: [row],
       });
     }
   },
