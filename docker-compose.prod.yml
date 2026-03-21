@@ -11,3 +11,7 @@ services:
       - ./media:/app/media
     networks:
       - coolify
+
+networks:
+  coolify:
+    external: true
