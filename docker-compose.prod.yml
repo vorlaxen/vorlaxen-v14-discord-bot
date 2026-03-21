@@ -1,0 +1,24 @@
+name: VorlaxenDiscordBot
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: vorlaxen_bot
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+        
+volumes:
+  postgres-data:
+  redis-data:
