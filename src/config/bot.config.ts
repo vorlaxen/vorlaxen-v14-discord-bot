@@ -21,6 +21,7 @@ export enum BotComponentColor {
   PRIMARY = '#5865F2',
   SUCCESS = '#57F287',
   DANGER = '#ED4245',
+  SECONDARY = '#d90be0',
   WARNING = '#FEE75C',
   INFO = '#3498DB',
   PROCESS = '#2B2D31'

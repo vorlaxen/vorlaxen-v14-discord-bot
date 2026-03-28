@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, Message, ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, Message, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { BotCommand } from '@/shared/types/bot.type';
 import { BotComponentColor } from '@/config';
 import { MessageHelper } from '@/shared/utils/bot';
@@ -14,14 +14,16 @@ const PingCommand: BotCommand = {
 
   execute: async context => {
     const isSlash = context instanceof ChatInputCommandInteraction;
-    const startTime = Date.now();
+    let msgPing: number;
 
     if (isSlash) {
-      await context.deferReply({ ephemeral: true });
+      const sent = await context.deferReply({ flags: [MessageFlags.Ephemeral], fetchReply: true });
+      msgPing = sent.createdTimestamp - context.createdTimestamp;
+    } else {
+      msgPing = Date.now() - context.createdTimestamp;
     }
 
     const wsPing = context.client.ws.ping;
-    const msgPing = Date.now() - startTime;
 
     const pingEmbed = MessageHelper.createEmbed({
       title: 'System Status Report',

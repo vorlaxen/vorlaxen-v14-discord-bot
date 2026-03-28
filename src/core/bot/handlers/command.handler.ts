@@ -4,7 +4,7 @@ import logger from '@/infrastructure/logger';
 import { VorlaxenBot } from '..';
 import { BotCommand } from '@/shared/types/bot.type';
 import { REST, Routes } from 'discord.js';
-import { botClientConfig } from '@/config';
+import { botClientConfig, RuntimeConfig } from '@/config';
 
 function getRecursiveFiles(dirPath: string): string[] {
   let results: string[] = [];
@@ -29,51 +29,66 @@ function getRecursiveFiles(dirPath: string): string[] {
 export async function deploySlashCommands(commands: BotCommand[]) {
   const slashCommands = commands
     .filter(cmd => cmd.execute)
-    .map(cmd => {
-      return cmd.data.toJSON();
-    });
+    .map(cmd => cmd.data.toJSON());
 
   if (slashCommands.length === 0) {
-    logger.warn('[Deploy] Yüklenecek Slash komutu bulunamadı.');
+    logger.warn('[DeploymentManager] No valid slash commands identified for synchronization.');
     return;
   }
 
   const rest = new REST({ version: '10' }).setToken(botClientConfig.token);
 
   try {
-    logger.info(`[Deploy] ${slashCommands.length} adet Slash komutu test sunucusuna yükleniyor...`);
+    const targetScope = RuntimeConfig.isProd ? 'Global' : 'Guild';
+    logger.info(`[DeploymentManager] Initiating ${targetScope} synchronization for ${slashCommands.length} commands.`);
 
-    await rest.put(
-      Routes.applicationGuildCommands(botClientConfig.clientId, botClientConfig.testGuildId),
-      { body: slashCommands }
-    );
+    const route = RuntimeConfig.isProd
+        ? Routes.applicationCommands(botClientConfig.clientId)
+        : Routes.applicationGuildCommands(botClientConfig.clientId, botClientConfig.testGuildId);
 
-    logger.info('[Deploy] Slash komutları başarıyla test sunucusuna yüklendi!');
+    await rest.put(route, { body: slashCommands });
+
+    logger.info('[DeploymentManager] Command synchronization completed successfully.');
   } catch (error) {
-    logger.error('[Deploy] Komutlar yüklenirken hata oluştu:', error);
+    logger.error('[DeploymentManager] Failed to synchronize application commands.', { error });
   }
 }
 
 export async function loadCommands(client: VorlaxenBot): Promise<void> {
-  const commandsPath = path.join(process.cwd(), 'src', 'modules', 'commands');
+  const modulesPath = path.join(process.cwd(), 'src', 'modules');
 
-  if (!existsSync(commandsPath)) {
-    logger.warn(`[Handler] Commands directory NOT found: ${commandsPath}`);
+  if (!existsSync(modulesPath)) {
+    logger.warn('[CommandHandler] Target module directory not found.', { path: modulesPath });
     return;
   }
 
-  const commandFiles = getRecursiveFiles(commandsPath);
+  const moduleDirs = readdirSync(modulesPath);
+  let allCommandFiles: string[] = [];
 
-  for (const filePath of commandFiles) {
+  for (const moduleName of moduleDirs) {
+    const commandsPath = path.join(modulesPath, moduleName, 'commands');
+
+    if (existsSync(commandsPath) && statSync(commandsPath).isDirectory()) {
+      const files = getRecursiveFiles(commandsPath);
+      allCommandFiles = allCommandFiles.concat(files);
+      logger.info(`[CommandHandler] Module discovered: ${moduleName}`, { fileCount: files.length });
+    }
+  }
+
+  const legacyPath = path.join(modulesPath, 'commands');
+  if (existsSync(legacyPath)) {
+    allCommandFiles = allCommandFiles.concat(getRecursiveFiles(legacyPath));
+  }
+
+  for (const filePath of allCommandFiles) {
     try {
       const commandModule = await import(filePath);
       const command: BotCommand = commandModule.default || commandModule;
 
       if (command && command.name) {
-        const relativePath = path.relative(commandsPath, filePath);
-        const pathParts = path.dirname(relativePath).split(path.sep);
-
-        command.category = pathParts[0] === '.' ? 'general' : pathParts.join(':');
+        const pathParts = filePath.split(path.sep);
+        const moduleIndex = pathParts.indexOf('modules');
+        command.category = moduleIndex !== -1 ? pathParts[moduleIndex + 1] : 'general';
 
         client.commands.set(command.name, command);
 
@@ -81,10 +96,16 @@ export async function loadCommands(client: VorlaxenBot): Promise<void> {
           command.aliases.forEach(alias => client.commands.set(alias, command));
         }
 
-        logger.info(`[Command] Loaded [${command.category}] ${command.name}`);
+        logger.info(`[CommandHandler] Command registered: ${command.name}`, { 
+          category: command.category, 
+          aliases: command.aliases?.length || 0 
+        });
       }
     } catch (error) {
-      logger.error(`[Command] Critical error loading ${filePath}:`, error);
+      logger.error('[CommandHandler] Integrity error during command registration.', { 
+        source: filePath, 
+        error 
+      });
     }
   }
 
