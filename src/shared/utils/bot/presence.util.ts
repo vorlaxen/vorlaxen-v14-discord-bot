@@ -1,4 +1,4 @@
-import logger from "@/infrastructure/logger";
+import { logger } from '@/infra/logger';
 import { Client, ActivityType, PresenceStatusData, PresenceData } from "discord.js";
 
 interface PresenceActivity {
@@ -59,7 +59,7 @@ class PresenceHelper {
       if (activities.length === 0) {
         return await this.setSinglePresence({
           status,
-          activities: [{ name: "Starting up...", type: ActivityType.Playing }],
+          activities: [{ name: "Başlatılıyor...", type: ActivityType.Playing }],
           afk,
           shardId,
         });

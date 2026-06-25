@@ -10,12 +10,12 @@ import { BotComponentColor } from '@/config';
 import { MessageHelper } from '@/shared/utils/bot';
 
 const ServerCommand: BotCommand = {
-  name: 'server-info',
-  description: 'Provides a corporate-level analysis report of the server.',
-  aliases: ['server', 'server-info', 'si', 'stats'],
+  name: 'sunucu-bilgi',
+  description: 'Sunucu hakkında detaylı bir analiz raporu sunar.',
+  aliases: ['sunucu', 'server', 'server-info', 'si', 'stats'],
   data: new SlashCommandBuilder()
-    .setName('server-info')
-    .setDescription('Generates a detailed report about server structure and security.'),
+    .setName('sunucu-bilgi')
+    .setDescription('Sunucu yapısı ve güvenliği hakkında detaylı bir rapor oluşturur.'),
 
   execute: async context => {
     const { guild } = context;
@@ -25,56 +25,56 @@ const ServerCommand: BotCommand = {
 
     const channels = guild.channels.cache;
     const boostCount = guild.premiumSubscriptionCount || 0;
-    const verificationLevels = ['None', 'Low', 'Medium', 'High', 'Very High'];
-    const mfaLevels = ['Disabled', 'Enabled'];
+    const verificationLevels = ['Yok', 'Düşük', 'Orta', 'Yüksek', 'Çok Yüksek'];
+    const mfaLevels = ['Kapalı', 'Açık'];
 
     const mainEmbed = MessageHelper.createEmbed({
       title: `${guild.name}`,
       description: [
-        `> ${guild.description || '*No server description available.*'}`,
+        `> ${guild.description || '*Sunucu açıklaması bulunmuyor.*'}`,
       ].join('\n'),
       thumbnail: guild.iconURL({ size: 1024 }) || '',
       color: BotComponentColor.PRIMARY,
       fields: [
         {
-          name: 'General Information',
+          name: 'Genel Bilgiler',
           value: [
             '',
-            `**Owner**`,
+            `**Sahip**`,
             `<@${guild.ownerId}>`,
             '',
-            `**Server ID**`,
+            `**Sunucu ID**`,
             `\`${guild.id}\``,
             '',
-            `**Created At**`,
+            `**Oluşturulma Tarihi**`,
             `<t:${Math.floor(guild.createdTimestamp / 1000)}:D>`,
           ].join('\n'),
           inline: true,
         },
         {
-          name: 'Statistics',
+          name: 'İstatistikler',
           value: [
             '',
-            `**Members**`,
+            `**Üyeler**`,
             `\`${guild.memberCount}\``,
             '',
-            `**Boosts**`,
+            `**Takviyeler**`,
             `\`${boostCount}\``,
             '',
-            `**Tier**`,
+            `**Seviye**`,
             `\`${guild.premiumTier}\``,
             '',
           ].join('\n'),
           inline: true,
         },
         {
-          name: 'Security',
+          name: 'Güvenlik',
           value: [
             '',
-            `**Verification Level**`,
+            `**Doğrulama Seviyesi**`,
             `\`${verificationLevels[guild.verificationLevel]}\``,
             '',
-            `**2FA Requirement**`,
+            `**2FA Zorunluluğu**`,
             `\`${mfaLevels[guild.mfaLevel]}\``,
             '',
           ].join('\n'),
@@ -86,19 +86,19 @@ const ServerCommand: BotCommand = {
     const row = MessageHelper.createActionRow([
       new ButtonBuilder()
         .setCustomId('main')
-        .setLabel('Overview')
+        .setLabel('Genel Bakış')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('stats')
-        .setLabel('Configuration')
+        .setLabel('Yapılandırma')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('roles')
-        .setLabel('Hierarchy')
+        .setLabel('Hiyerarşi')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('security')
-        .setLabel('Security')
+        .setLabel('Güvenlik')
         .setStyle(ButtonStyle.Secondary),
     ]);
 
@@ -111,7 +111,7 @@ const ServerCommand: BotCommand = {
 
     collector.on('collect', async i => {
       if (i.user.id !== user.id)
-        return i.reply({ content: 'This session is not assigned to you.', ephemeral: true });
+        return i.reply({ content: 'Bu menüyü yalnızca komutu kullanan kişi kullanabilir.', ephemeral: true });
 
       let currentEmbed: any;
 
@@ -122,18 +122,18 @@ const ServerCommand: BotCommand = {
 
         case 'stats':
           currentEmbed = MessageHelper.createEmbed({
-            title: `System Configuration`,
-            description: 'Channel architecture and media asset distribution report.\n\u200B',
+            title: `Sistem Yapılandırması`,
+            description: 'Kanal yapısı ve medya varlıkları dağılım raporu.\n\u200B',
             color: BotComponentColor.PRIMARY,
             fields: [
               {
-                name: 'Channel Inventory',
-                value: `• Text Channels: \`${channels.filter(c => c.type === ChannelType.GuildText).size}\`\n\n• Voice Channels: \`${channels.filter(c => c.type === ChannelType.GuildVoice).size}\`\n\n• Categories: \`${channels.filter(c => c.type === ChannelType.GuildCategory).size}\``,
+                name: 'Kanal Envanteri',
+                value: `• Metin Kanalları: \`${channels.filter(c => c.type === ChannelType.GuildText).size}\`\n\n• Ses Kanalları: \`${channels.filter(c => c.type === ChannelType.GuildVoice).size}\`\n\n• Kategoriler: \`${channels.filter(c => c.type === ChannelType.GuildCategory).size}\``,
                 inline: true,
               },
               {
-                name: 'Media Assets',
-                value: `• Emojis: \`${guild.emojis.cache.size}\`\n\n• Stickers: \`${guild.stickers.cache.size}\`\n\n• Server Banner: \`${guild.banner ? 'Available' : 'Not Set'}\``,
+                name: 'Medya Varlıkları',
+                value: `• Emojiler: \`${guild.emojis.cache.size}\`\n\n• Çıkartmalar: \`${guild.stickers.cache.size}\`\n\n• Sunucu Afişi: \`${guild.banner ? 'Mevcut' : 'Ayarlanmamış'}\``,
                 inline: true,
               },
             ],
@@ -154,35 +154,35 @@ const ServerCommand: BotCommand = {
                   .map(r => r.toString())
                   .join(
                     ', '
-                  )}\n\n*Note: ${rolesArray.length - 15} more roles are not displayed.*`
-              : rolesArray.map(r => r.toString()).join(', ') || 'No roles defined.';
+                  )}\n\n*Not: ${rolesArray.length - 15} rol daha gösterilmiyor.*`
+              : rolesArray.map(r => r.toString()).join(', ') || 'Tanımlı rol bulunmuyor.';
 
           currentEmbed = MessageHelper.createEmbed({
-            title: `Hierarchy & Role Management`,
-            description: `There are a total of **${rolesArray.length}** role groups in the system.\n\n${rolesDisplay}`,
+            title: `Hiyerarşi ve Rol Yönetimi`,
+            description: `Sistemde toplam **${rolesArray.length}** rol grubu bulunuyor.\n\n${rolesDisplay}`,
             color: BotComponentColor.PRIMARY,
           });
           break;
 
         case 'security':
           currentEmbed = MessageHelper.createEmbed({
-            title: 'Security & Data Privacy',
-            description: 'Server moderation and content filtering standards.\n\u200B',
+            title: 'Güvenlik ve Veri Gizliliği',
+            description: 'Sunucu moderasyonu ve içerik filtreleme standartları.\n\u200B',
             color: BotComponentColor.PRIMARY,
             fields: [
               {
-                name: 'Content Filter',
-                value: `\`${guild.explicitContentFilter === 0 ? 'Disabled' : 'Enabled (Auto Scan)'}\``,
+                name: 'İçerik Filtresi',
+                value: `\`${guild.explicitContentFilter === 0 ? 'Kapalı' : 'Açık (Otomatik Tarama)'}\``,
                 inline: true,
               },
               {
-                name: 'Notification Level',
-                value: `\`${guild.defaultMessageNotifications === 0 ? 'All Messages' : 'Mentions Only'}\``,
+                name: 'Bildirim Seviyesi',
+                value: `\`${guild.defaultMessageNotifications === 0 ? 'Tüm Mesajlar' : 'Yalnızca Bahsetmeler'}\``,
                 inline: true,
               },
               {
-                name: 'NSFW Access Level',
-                value: `\`Level: ${guild.nsfwLevel}\``,
+                name: 'NSFW Erişim Seviyesi',
+                value: `\`Seviye: ${guild.nsfwLevel}\``,
                 inline: true,
               },
             ],

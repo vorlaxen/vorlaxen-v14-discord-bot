@@ -12,6 +12,18 @@ services:
     networks:
       - coolify
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: vorlaxen_worker
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    command: ["node", "-r", "module-alias/register", "dist/app/worker/index.js"]
+    networks:
+      - coolify
+
 networks:
   coolify:
     external: true

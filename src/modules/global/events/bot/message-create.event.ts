@@ -1,8 +1,8 @@
 import { Events, Message, PermissionsBitField } from 'discord.js';
 import { BotEvent } from '@/shared/types/bot.type';
-import { VorlaxenBot } from '@/core/bot';
+import { VorlaxenBot } from '@/app/bot';
 import { botClientConfig } from '@/config';
-import logger from '@/infrastructure/logger';
+import { logger } from '@/infra/logger';
 import { checkCooldown } from '@/shared/utils/bot/bot-cache.util';
 
 const messageCreate: BotEvent<Events.MessageCreate> = {
@@ -25,21 +25,21 @@ const messageCreate: BotEvent<Events.MessageCreate> = {
     if (command.settings?.ownerRequired) {
       const isOwner = botClientConfig.ownerIds.includes(message.author.id);
       if (!isOwner) {
-        return message.reply('This command is restricted to bot owners only.').then(msg => {
-          setTimeout(() => msg.delete().catch(() => {}), 5000);
+        return message.reply('Bu komutu yalnızca bot sahipleri kullanabilir.').then(msg => {
+          setTimeout(() => msg.delete().catch(() => { }), 5000);
         });
       }
     }
 
     if (command.settings?.adminRequired) {
       if (!message.member?.permissions.has(PermissionsBitField.Flags.Administrator)) {
-        message.reply('Administrator permissions are required to execute this command.');
+        message.reply('Bu komutu kullanmak için yönetici yetkisine sahip olmalısın.');
         return;
       }
     }
 
-    if (command.settings?.mainGuildOnly && message.guildId !== botClientConfig.testGuildId) {
-      message.reply('This command can only be used in the management server.');
+    if (command.settings?.mainGuildOnly && message.guildId !== botClientConfig.GuildId) {
+      message.reply('Bu komut yalnızca ana sunucuda kullanılabilir.');
       return;
     }
 
@@ -52,12 +52,12 @@ const messageCreate: BotEvent<Events.MessageCreate> = {
         );
         if (remainingTime > 0) {
           message.reply(
-            `Please wait **${remainingTime}s** before reusing the \`${command.name}\` command.`
+            `\`${command.name}\` komutunu tekrar kullanmadan önce **${remainingTime} saniye** beklemelisin.`
           );
           return;
         }
       } catch (err) {
-        logger.error(`[Cooldown] Check failed for ${cmdName}:`, err);
+        logger.error({ err }, `[Cooldown] Check failed for ${cmdName}`);
       }
     }
 
@@ -71,24 +71,27 @@ const messageCreate: BotEvent<Events.MessageCreate> = {
     };
 
     try {
-      logger.info(`[Command] Execution started: ${cmdName}`, logMetadata);
+      logger.info(logMetadata, `[Command] Execution started: ${cmdName}`);
 
       const startTime = Date.now();
       await command.execute(message, args);
       const duration = Date.now() - startTime;
 
-      logger.info(`[Command] Execution completed: ${cmdName}`, {
-        ...logMetadata,
-        duration: `${duration}ms`,
-      });
+      logger.info(
+        { ...logMetadata, duration: `${duration}ms` },
+        `[Command] Execution completed: ${cmdName}`,
+      );
     } catch (err) {
-      logger.error(`[Command] Execution failed: ${cmdName}`, {
-        ...logMetadata,
-        error: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-      });
+      logger.error(
+        {
+          ...logMetadata,
+          err: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        },
+        `[Command] Execution failed: ${cmdName}`,
+      );
 
-      await message.reply('🚨 An unexpected error occurred while executing this command.');
+      await message.reply('🚨 Komut çalıştırılırken beklenmeyen bir hata oluştu.');
     }
   },
 };

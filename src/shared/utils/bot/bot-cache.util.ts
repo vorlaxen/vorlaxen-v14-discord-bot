@@ -1,7 +1,5 @@
-import { getRedisClient, redisSetWithTTL } from '@/infrastructure/cache';
-import logger from '@/infrastructure/logger';
-
-const redis = getRedisClient();
+import { redisService } from '@/infra/cache';
+import { logger } from '@/infra/logger';
 
 /**
  * Checks if a user is on cooldown for a specific command using Redis.
@@ -10,22 +8,26 @@ const redis = getRedisClient();
 export async function checkCooldown(
   userId: string,
   commandName: string,
-  cooldownSeconds: number
+  cooldownSeconds: number,
 ): Promise<number> {
   const key = `cooldown:${commandName}:${userId}`;
 
   try {
+    const redis = redisService.getClient();
     const ttl = await redis.ttl(key);
 
     if (ttl > 0) {
       return ttl;
     }
-    
-    await redisSetWithTTL(redis, key, 'active', cooldownSeconds);
+
+    await redisService.set(key, 'active', cooldownSeconds);
 
     return 0;
   } catch (error) {
-    logger.error(`[Redis] Cooldown check failed for user ${userId}:`, error);
+    logger.error(
+      { err: error },
+      `[Redis] Cooldown check failed for user ${userId}`,
+    );
     return 0;
   }
 }

@@ -10,14 +10,14 @@ import { BotComponentColor } from '@/config';
 import { MessageHelper } from '@/shared/utils/bot';
 
 const UserInfoCommand: BotCommand = {
-  name: 'user-info',
-  description: 'Comprehensive corporate-level analysis of a user identity.',
-  aliases: ['user', 'ui', 'whois', 'who', 'profile'],
+  name: 'kullanici-bilgi',
+  description: 'Bir kullanıcı hakkında detaylı bilgi raporu oluşturur.',
+  aliases: ['kullanici', 'user', 'ui', 'whois', 'who', 'profil', 'user-info'],
   data: new SlashCommandBuilder()
-    .setName('user-info')
-    .setDescription('Generates a detailed report about user identity and access levels.')
+    .setName('kullanici-bilgi')
+    .setDescription('Kullanıcı kimliği ve erişim seviyeleri hakkında detaylı bir rapor oluşturur.')
     .addUserOption(option =>
-      option.setName('target').setDescription('Select the user to analyze.').setRequired(false)
+      option.setName('hedef').setDescription('Bilgisi görüntülenecek kullanıcı.').setRequired(false)
     ),
 
   execute: async context => {
@@ -26,74 +26,72 @@ const UserInfoCommand: BotCommand = {
 
     const targetUser =
       'options' in context
-        ? context.options.getUser('target') || context.user
+        ? context.options.getUser('hedef') || context.user
         : context.mentions.users.first() || context.author;
 
     const user = await targetUser.fetch(true);
     const member = await guild.members.fetch(user.id).catch(() => null);
 
     const badgeMap: Record<string, string> = {
-      Staff: 'Discord Staff',
-      Partner: 'Partnered Server Owner',
-      Hypesquad: 'HypeSquad Events',
-      BugHunterLevel1: 'Bug Hunter Tier 1',
-      BugHunterLevel2: 'Bug Hunter Tier 2',
-      HypeSquadOnlineHouse1: 'House of Bravery',
-      HypeSquadOnlineHouse2: 'House of Brilliance',
-      HypeSquadOnlineHouse3: 'House of Balance',
-      PremiumEarlySupporter: 'Early Supporter',
-      VerifiedBot: 'Verified Bot',
-      VerifiedDeveloper: 'Early Verified Developer',
-      ActiveDeveloper: 'Active Developer',
+      Staff: 'Discord Personeli',
+      Partner: 'Ortak Sunucu Sahibi',
+      Hypesquad: 'HypeSquad Etkinlikleri',
+      BugHunterLevel1: 'Hata Avcısı (Seviye 1)',
+      BugHunterLevel2: 'Hata Avcısı (Seviye 2)',
+      HypeSquadOnlineHouse1: 'Cesaret Evi',
+      HypeSquadOnlineHouse2: 'Parlaklık Evi',
+      HypeSquadOnlineHouse3: 'Denge Evi',
+      PremiumEarlySupporter: 'Erken Destekçi',
+      VerifiedBot: 'Doğrulanmış Bot',
+      VerifiedDeveloper: 'Erken Doğrulanmış Geliştirici',
+      ActiveDeveloper: 'Aktif Geliştirici',
     };
     const badges =
       user.flags
         ?.toArray()
         .map(f => badgeMap[f] || f)
-        .join(', ') || 'None';
+        .join(', ') || 'Yok';
 
-    // --- MAIN OVERVIEW EMBED ---
     const mainEmbed = MessageHelper.createEmbed({
-      title: `Identity Analysis: ${user.tag}`,
-      // Added spacing between Global ID and Status
+      title: `Kullanıcı Bilgisi: ${user.tag}`,
       description: [
-        `**Global ID:** \`${user.id}\``,
-        `**Status:** ${member ? 'Internal Personnel' : 'External Entity'}`,
-        '\u200B', // Forces a gap before the fields start
+        `**Kullanıcı ID:** \`${user.id}\``,
+        `**Durum:** ${member ? 'Sunucu Üyesi' : 'Sunucu Dışı'}`,
+        '\u200B',
       ].join('\n'),
       thumbnail: user.displayAvatarURL({ size: 1024 }),
       image: user.bannerURL({ size: 1024 }) || undefined,
       color: member?.displayHexColor || BotComponentColor.PRIMARY,
       fields: [
         {
-          name: 'Identification',
+          name: 'Kimlik',
           value: [
-            '\u200B', // Invisible top buffer
-            `**Username**`,
+            '\u200B',
+            `**Kullanıcı Adı**`,
             `\`${user.username}\``,
             '',
-            `**Badges**`,
+            `**Rozetler**`,
             `${badges}`,
             '',
-            `**Type**`,
-            `${user.bot ? 'Automated Unit' : 'Organic'}`,
-            '\u200B', // Bottom buffer
+            `**Tür**`,
+            `${user.bot ? 'Bot' : 'İnsan'}`,
+            '\u200B',
           ].join('\n'),
           inline: true,
         },
         {
-          name: 'Chronology',
+          name: 'Zaman Çizelgesi',
           value: [
-            '\u200B', // Invisible top buffer
-            `**Registered**`,
+            '\u200B',
+            `**Hesap Oluşturma**`,
             `<t:${Math.floor(user.createdTimestamp / 1000)}:D>`,
             '',
-            `**Joined**`,
-            member ? `<t:${Math.floor(member.joinedTimestamp! / 1000)}:R>` : '`N/A`',
+            `**Sunucuya Katılım**`,
+            member ? `<t:${Math.floor(member.joinedTimestamp! / 1000)}:R>` : '`Yok`',
             '',
-            `**Account Age**`,
-            `${Math.floor((Date.now() - user.createdTimestamp) / (1000 * 60 * 60 * 24 * 365))} Years`,
-            '\u200B', // Bottom buffer
+            `**Hesap Yaşı**`,
+            `${Math.floor((Date.now() - user.createdTimestamp) / (1000 * 60 * 60 * 24 * 365))} yıl`,
+            '\u200B',
           ].join('\n'),
           inline: true,
         },
@@ -103,17 +101,17 @@ const UserInfoCommand: BotCommand = {
     const row = MessageHelper.createActionRow([
       new ButtonBuilder()
         .setCustomId('overview')
-        .setLabel('Overview')
+        .setLabel('Genel Bakış')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('permissions')
-        .setLabel('Access Control')
+        .setLabel('Yetkiler')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('roles')
-        .setLabel('Hierarchy')
+        .setLabel('Roller')
         .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('status').setLabel('Status').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('status').setLabel('Durum').setStyle(ButtonStyle.Secondary),
     ]);
 
     const response = await context.reply({ embeds: [mainEmbed], components: [row] });
@@ -126,7 +124,7 @@ const UserInfoCommand: BotCommand = {
     collector.on('collect', async i => {
       const commandUser = 'user' in context ? context.user : context.author;
       if (i.user.id !== commandUser.id) {
-        return i.reply({ content: 'Access denied. Unauthorized session.', ephemeral: true });
+        return i.reply({ content: 'Bu menüyü yalnızca komutu kullanan kişi kullanabilir.', ephemeral: true });
       }
 
       let currentEmbed: any;
@@ -139,35 +137,35 @@ const UserInfoCommand: BotCommand = {
         case 'permissions':
           if (!member)
             return i.reply({
-              content: 'Permission data unavailable for external entities.',
+              content: 'Sunucu dışı kullanıcılar için yetki bilgisi mevcut değil.',
               ephemeral: true,
             });
 
           const criticalPerms = [
-            { flag: PermissionsBitField.Flags.Administrator, label: 'Admin' },
-            { flag: PermissionsBitField.Flags.ManageGuild, label: 'Manage Guild' },
-            { flag: PermissionsBitField.Flags.BanMembers, label: 'Ban Rights' },
-            { flag: PermissionsBitField.Flags.ManageRoles, label: 'Manage Roles' },
+            { flag: PermissionsBitField.Flags.Administrator, label: 'Yönetici' },
+            { flag: PermissionsBitField.Flags.ManageGuild, label: 'Sunucuyu Yönet' },
+            { flag: PermissionsBitField.Flags.BanMembers, label: 'Üye Yasaklama' },
+            { flag: PermissionsBitField.Flags.ManageRoles, label: 'Rolleri Yönet' },
           ]
             .map(p => (member.permissions.has(p.flag) ? `+ \`${p.label}\`` : `- \`${p.label}\``))
             .join('\n');
 
           currentEmbed = MessageHelper.createEmbed({
-            title: 'Critical Access Analysis',
-            description: `Personnel administrative evaluation:\n\n${criticalPerms}`,
+            title: 'Kritik Yetki Analizi',
+            description: `Yönetici yetkileri değerlendirmesi:\n\n${criticalPerms}`,
             color: BotComponentColor.PRIMARY,
           });
           break;
 
         case 'roles':
-          if (!member) return i.reply({ content: 'Hierarchy data unavailable.', ephemeral: true });
+          if (!member) return i.reply({ content: 'Rol bilgisi mevcut değil.', ephemeral: true });
           const roles = member.roles.cache
             .filter(r => r.name !== '@everyone')
             .sort((a, b) => b.position - a.position);
 
           currentEmbed = MessageHelper.createEmbed({
-            title: 'Hierarchy & Role Distribution',
-            description: `**Highest Role:** ${member.roles.highest}\n**Total Roles:** ${roles.size}\n\n${roles.map(r => r.toString()).join(' ')}`,
+            title: 'Rol Hiyerarşisi',
+            description: `**En Yüksek Rol:** ${member.roles.highest}\n**Toplam Rol:** ${roles.size}\n\n${roles.map(r => r.toString()).join(' ')}`,
             color: member.displayHexColor,
           });
           break;
@@ -175,20 +173,20 @@ const UserInfoCommand: BotCommand = {
         case 'status':
           const voiceChannel = member?.voice.channel
             ? `${member.voice.channel.name}`
-            : 'Disconnected';
+            : 'Bağlı değil';
           currentEmbed = MessageHelper.createEmbed({
-            title: 'Active Status Analysis',
-            description: 'Evaluation of real-time presence and server engagement.',
+            title: 'Aktif Durum Analizi',
+            description: 'Anlık varlık ve sunucu etkileşimi değerlendirmesi.',
             fields: [
-              { name: 'Voice Status', value: `\`${voiceChannel}\``, inline: true },
+              { name: 'Ses Durumu', value: `\`${voiceChannel}\``, inline: true },
               {
-                name: 'Server Booster',
-                value: member?.premiumSince ? 'Confirmed' : 'None',
+                name: 'Sunucu Takviyecisi',
+                value: member?.premiumSince ? 'Evet' : 'Hayır',
                 inline: true,
               },
               {
-                name: 'Decoration',
-                value: user.avatarDecorationURL() ? 'Active' : 'None',
+                name: 'Avatar Süslemesi',
+                value: user.avatarDecorationURL() ? 'Aktif' : 'Yok',
                 inline: true,
               },
             ],

@@ -1,6 +1,6 @@
 import { botClientConfig } from '@/config';
-import { VorlaxenBot } from '@/core/bot';
-import logger from '@/infrastructure/logger';
+import { VorlaxenBot } from '@/app/bot';
+import { logger } from '@/infra/logger';
 import { BotEvent } from '@/shared/types/bot.type';
 import { checkCooldown } from '@/shared/utils/bot';
 import { Events, Interaction, PermissionsBitField } from 'discord.js';
@@ -10,6 +10,22 @@ const interactionCreate: BotEvent<Events.InteractionCreate> = {
   once: false,
   execute: async (interaction: Interaction): Promise<void> => {
     const client = interaction.client as VorlaxenBot;
+
+    if (interaction.isAutocomplete()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command?.autocomplete) return;
+
+      try {
+        await command.autocomplete(interaction);
+      } catch (err) {
+        logger.error(
+          { err },
+          `[Autocomplete] Failed for ${interaction.commandName}`,
+        );
+        await interaction.respond([]).catch(() => { });
+      }
+      return;
+    }
 
     if (!interaction.isChatInputCommand()) return;
 
@@ -21,7 +37,7 @@ const interactionCreate: BotEvent<Events.InteractionCreate> = {
       return;
     }
 
-    if (command.settings?.mainGuildOnly && interaction.guildId !== botClientConfig.testGuildId) {
+    if (command.settings?.mainGuildOnly && interaction.guildId !== botClientConfig.GuildId) {
       interaction.reply({
         content: 'Bu komut yalnızca ana sunucuda kullanılabilir.',
         ephemeral: true,
@@ -53,12 +69,22 @@ const interactionCreate: BotEvent<Events.InteractionCreate> = {
       }
     }
 
+    if (command.settings?.manageGuildRequired) {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageGuild)) {
+        interaction.reply({
+          content: 'Bu komutu kullanmak için sunucuyu yönet yetkisine sahip olmalısın.',
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
     if (command.settings?.cooldown && command.settings.cooldown > 0) {
       try {
         const ttl = await checkCooldown(
           interaction.user.id,
           command.name,
-          command.settings.cooldown
+          command.settings.cooldown,
         );
         if (ttl > 0) {
           interaction.reply({
@@ -68,7 +94,7 @@ const interactionCreate: BotEvent<Events.InteractionCreate> = {
           return;
         }
       } catch (err) {
-        logger.error(`[Cooldown] Check failed: ${interaction.commandName}`, err);
+        logger.error({ err }, `[Cooldown] Check failed: ${interaction.commandName}`);
       }
     }
 
@@ -88,22 +114,26 @@ const interactionCreate: BotEvent<Events.InteractionCreate> = {
       if (deleteTime) {
         setTimeout(async () => {
           try {
-            await interaction.deleteReply().catch(() => {});
-          } catch (e) {}
+            await interaction.deleteReply().catch(() => { });
+          } catch (e) { }
         }, deleteTime);
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      logger.error(`[Command Error] ${interaction.commandName}: ${error.message}`, {
-        stack: error.stack,
-      });
+      logger.error(
+        { err: error, stack: error.stack },
+        `[Command Error] ${interaction.commandName}: ${error.message}`,
+      );
 
-      const errorPayload = { content: 'Komut çalıştırılırken bir hata oluştu.', ephemeral: true };
+      const errorPayload = {
+        content: 'Komut çalıştırılırken bir hata oluştu.',
+        ephemeral: true,
+      };
 
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(errorPayload).catch(() => {});
+        await interaction.followUp(errorPayload).catch(() => { });
       } else {
-        await interaction.reply(errorPayload).catch(() => {});
+        await interaction.reply(errorPayload).catch(() => { });
       }
     }
   },

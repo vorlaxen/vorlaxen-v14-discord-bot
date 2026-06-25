@@ -147,3 +147,6 @@ database/config/config.json
 !package.json
 !docker-compose.yml
 !Dockerfile
+
+
+.pnpm-store/

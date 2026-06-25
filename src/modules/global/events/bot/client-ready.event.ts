@@ -1,11 +1,11 @@
 import { Events, ActivityType, ClientPresenceStatus } from "discord.js";
 import { BotEvent } from "@/shared/types/bot.type";
-import logger from "@/infrastructure/logger";
+import { logger } from '@/infra/logger';
 import PresenceHelper from "@/shared/utils/bot/presence.util";
 
 const ACTIVITIES = [
-    { name: "TypeScript writes", type: ActivityType.Playing, durationMs: 45_000 },
-    { name: "Examining GitHub projects", type: ActivityType.Watching, durationMs: 45_000 },
+    { name: "TypeScript kodluyor", type: ActivityType.Playing, durationMs: 45_000 },
+    { name: "GitHub projelerini inceliyor", type: ActivityType.Watching, durationMs: 45_000 },
 ] as const;
 
 const clientReady: BotEvent<Events.ClientReady> = {
@@ -26,7 +26,7 @@ const clientReady: BotEvent<Events.ClientReady> = {
 
             logger.info("Bot Presence rotation initialized.");
         } catch (error) {
-            logger.error("Bot Critical error in ClientReady event:", error);
+            logger.error({ err: error }, 'Bot Critical error in ClientReady event');
         }
     }
 };

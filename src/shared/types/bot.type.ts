@@ -1,9 +1,9 @@
 import {
   ClientEvents,
   ChatInputCommandInteraction,
+  AutocompleteInteraction,
   Message,
   SlashCommandBuilder,
-  PermissionResolvable,
 } from 'discord.js';
 
 export interface BotEvent<T extends keyof ClientEvents> {
@@ -15,7 +15,9 @@ export interface BotEvent<T extends keyof ClientEvents> {
 export interface CommandSettings {
   ownerRequired?: boolean;
   adminRequired?: boolean;
+  manageGuildRequired?: boolean;
   mainGuildOnly?: boolean;
+  disabled?: boolean;
   cooldown?: number;
   deleteTime?: number;
 }
@@ -28,5 +30,9 @@ export interface BotCommand {
   aliases?: string[];
   settings?: CommandSettings;
   data?: SlashCommandBuilder | any;
-  execute: (context: Message | ChatInputCommandInteraction, args: string[]) => Promise<any>;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
+  execute: (
+    context: Message | ChatInputCommandInteraction,
+    args?: string[] | any,
+  ) => Promise<any>;
 }

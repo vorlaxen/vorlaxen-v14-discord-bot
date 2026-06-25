@@ -2,32 +2,41 @@
   "name": "vorlaxen-v14-discord-bot",
   "version": "1.0.0",
   "description": "Vorlaxen Discord V14 Bot",
-  "main": "dist/app.js",
+  "main": "dist/app/index.js",
   "proxy": "http://localhost:5000",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/app.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/app/index.ts",
     "dev:nodemon": "nodemon",
-    "worker:dev": "ts-node src/infrastructure/queues/queue.worker.ts",
+    "worker:dev": "nodemon --config nodemon.worker.json",
     "build": "tsc --skipLibCheck || true",
-    "start": "cross-env NODE_ENV=production node -r module-alias/register dist/app.js"
+    "start": "cross-env NODE_ENV=production node -r module-alias/register dist/app/index.js",
+    "worker:start": "cross-env NODE_ENV=production node -r module-alias/register dist/app/worker/index.js",
+    "compose:dev": "docker compose -f docker-compose.dev.yml up -d",
+    "compose:dev:build": "docker compose -f docker-compose.dev.yml up -d --build",
+    "compose:dev:down": "docker compose -f docker-compose.dev.yml down",
+    "compose:dev:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d --build",
+    "compose:dev:logs": "docker compose -f docker-compose.dev.yml logs -f",
+    "compose:prod": "docker compose -f docker-compose.prod.yml up -d",
+    "compose:prod:build": "docker compose -f docker-compose.prod.yml up -d --build",
+    "compose:prod:down": "docker compose -f docker-compose.prod.yml down"
   },
   "_moduleAliases": {
     "@": "dist"
   },
   "dependencies": {
-    "bullmq": "^5.1.0",
+    "bullmq": "^5.34.10",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
-    "ioredis": "^5.10.1",
+    "ioredis": "^5.5.0",
     "module-alias": "^2.2.3",
-    "redis": "^4.6.13",
-    "winston": "^3.19.0",
-    "winston-transport": "^4.9.0"
+    "pg": "^8.13.3",
+    "pino": "^9.6.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
     "@types/pg": "^8.11.2",
-    "@types/winston": "^2.4.4",
     "cross-env": "^10.0.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",

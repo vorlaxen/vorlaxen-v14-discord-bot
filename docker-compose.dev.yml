@@ -1,10 +1,13 @@
 name: VorlaxenDiscordBot
 
+x-dev-image: &dev-image vorlaxen-discord-bot-dev:latest
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    image: *dev-image
     container_name: vorlaxen_bot
     restart: unless-stopped
     env_file:
@@ -19,40 +22,53 @@ services:
       redis:
         condition: service_healthy
 
+  worker:
+    image: *dev-image
+    container_name: vorlaxen_worker
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    command: ["pnpm", "worker:dev"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
-    container_name: vorlaxen_postgres
-    restart: unless-stopped
+    container_name: vpostgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
-      POSTGRES_DB: vorlaxen_db
-      POSTGRES_USER: vorlaxen_user
-      POSTGRES_PASSWORD: pass123
+      POSTGRES_DB: vorlaxen-db
+      POSTGRES_USER: vorlaxen
+      POSTGRES_PASSWORD: VFKuMdr5gH5Ypq
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vorlaxen_user -d vorlaxen_db"]
+      test: ["CMD-SHELL", "pg_isready -U vorlaxen -d vorlaxen-db"]
       interval: 5s
       timeout: 5s
       retries: 5
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
-    container_name: vorlaxen_redis
-    restart: unless-stopped
+    container_name: vredis
     ports:
-      - "6379:6379"
-    command: >
-      redis-server
-      --requirepass VFKuMdr5gH5Ypq
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--requirepass", "VFKuMdr5gH5Ypq", "--user", "vorlaxen", "on", ">VFKuMdr5gH5Ypq", "~*", "+@all"]
+    volumes:
+      - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "VFKuMdr5gH5Ypq", "ping"]
+      test: ["CMD", "redis-cli", "-u", "redis://vorlaxen:VFKuMdr5gH5Ypq@localhost:6379", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
-    volumes:
-      - redis-data:/data
 
 volumes:
   postgres-data:

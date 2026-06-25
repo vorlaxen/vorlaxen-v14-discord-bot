@@ -1,0 +1,12 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": ["node_modules", "dist", "test", "**/*.spec.ts", "**/*.test.ts"],
+  "delay": 500,
+  "legacyWatch": true,
+  "watchOptions": {
+    "usePolling": true,
+    "interval": 500
+  },
+  "exec": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/app/worker/index.ts"
+}

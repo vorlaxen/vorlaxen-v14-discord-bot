@@ -26,4 +26,4 @@ RUN mkdir -p logs media data
 
 EXPOSE 5000
 
-CMD ["node", "-r", "module-alias/register", "dist/app.js"]
+CMD ["node", "-r", "module-alias/register", "dist/app/index.js"]

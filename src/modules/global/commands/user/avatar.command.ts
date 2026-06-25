@@ -9,20 +9,20 @@ import { BotComponentColor } from '@/config';
 import { MessageHelper } from '@/shared/utils/bot';
 
 const AvatarCommand: BotCommand = {
-  name: 'avatar',
-  description: 'Visual asset extraction and identification.',
-  aliases: ['av', 'pfp', 'pp', 'icon', 'banner'],
+  name: 'profil-resmi',
+  description: 'Kullanıcının profil resmini ve afişini gösterir.',
+  aliases: ['av', 'pfp', 'pp', 'avatar', 'icon', 'banner', 'profil'],
   data: new SlashCommandBuilder()
-    .setName('avatar')
-    .setDescription('Extracts and displays user visual identification assets.')
+    .setName('profil-resmi')
+    .setDescription('Kullanıcının profil resmini ve afişini gösterir.')
     .addUserOption(option =>
-      option.setName('target').setDescription('Select the user to analyze.').setRequired(false)
+      option.setName('hedef').setDescription('Profil resmi görüntülenecek kullanıcı.').setRequired(false)
     ),
 
   execute: async context => {
     const targetUser =
       'options' in context
-        ? context.options.getUser('target') || context.user
+        ? context.options.getUser('hedef') || context.user
         : context.mentions.users.first() || context.author;
 
     const user = await targetUser.fetch(true);
@@ -31,8 +31,8 @@ const AvatarCommand: BotCommand = {
     const bannerURL = user.bannerURL({ size: 1024 });
 
     const avatarEmbed = MessageHelper.createEmbed({
-      title: `Visual Asset: ${user.tag}`,
-      description: `**Asset Type:** Primary Identification (Avatar)\n**Format:** PNG/WebP @ 1024px`,
+      title: `Profil Resmi: ${user.tag}`,
+      description: `**Tür:** Profil Resmi (Avatar)\n**Format:** PNG/WebP @ 1024px`,
       image: avatarURL,
       color: BotComponentColor.PRIMARY
     });
@@ -40,16 +40,16 @@ const AvatarCommand: BotCommand = {
     const row = MessageHelper.createActionRow([
       new ButtonBuilder()
         .setCustomId('view_avatar')
-        .setLabel('Primary Avatar')
+        .setLabel('Profil Resmi')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(true),
       new ButtonBuilder()
         .setCustomId('view_banner')
-        .setLabel('Profile Banner')
+        .setLabel('Profil Afişi')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!bannerURL),
       new ButtonBuilder()
-        .setLabel('Source Link')
+        .setLabel('Kaynak Bağlantısı')
         .setStyle(ButtonStyle.Link)
         .setURL(avatarURL),
     ]);
@@ -64,7 +64,7 @@ const AvatarCommand: BotCommand = {
     collector.on('collect', async i => {
       const commandUser = 'user' in context ? context.user : context.author;
       if (i.user.id !== commandUser.id) {
-        return i.reply({ content: 'Access denied. Unauthorized session.', ephemeral: true });
+        return i.reply({ content: 'Bu menüyü yalnızca komutu kullanan kişi kullanabilir.', ephemeral: true });
       }
 
       if (i.customId === 'view_avatar') {
@@ -78,14 +78,13 @@ const AvatarCommand: BotCommand = {
         });
       } 
       else if (i.customId === 'view_banner' && bannerURL) {
-        // Banner butonuna basıldığında
         row.components[0].setDisabled(false).setStyle(ButtonStyle.Secondary);
         row.components[1].setDisabled(true).setStyle(ButtonStyle.Primary);
         (row.components[2] as any).setURL(bannerURL);
 
         const bannerEmbed = MessageHelper.createEmbed({
-          title: `Visual Asset: ${user.tag}`,
-          description: `**Asset Type:** Extended Identity Banner\n**Format:** PNG/GIF @ 1024px`,
+          title: `Profil Afişi: ${user.tag}`,
+          description: `**Tür:** Profil Afişi\n**Format:** PNG/GIF @ 1024px`,
           image: bannerURL,
           color: BotComponentColor.PRIMARY
         });
